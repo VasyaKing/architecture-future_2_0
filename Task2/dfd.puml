@@ -1,0 +1,79 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(doctor, "Доктор")
+Person(client, "Клиент финтеха")
+Person(manager, "Аналитик/руководство")
+
+System_Boundary(MED, "Медицинский домен") {
+  System(medCore, "Медицинская система (EMR/HIS)")
+}
+
+System_Boundary(FIN, "Финтех-домен") {
+  System(finCore, "Финтех-платформа")
+  System(newFin, "Новый финтех-сервис")
+}
+
+System_Boundary(AI, "ИИ-домен") {
+  System(aiSvc, "ИИ-сервисы (модели диагностики)")
+}
+
+System_Boundary(PARTNER, "Партнёрская экосистема") {
+  System(pharma, "Фарма")
+  System(device, "Оборудование")
+}
+
+System_Boundary(CORP, "Корпоративный домен") {
+  System(corpSys, "HR / Инвентарь / Операции")
+}
+
+System_Boundary(INTEG, "Интеграция") {
+  System(bus, "Шина событий / API Gateway")
+}
+
+System_Boundary(DATA, "Платформа данных") {
+  System(dataLake, "Data Lake / ODS")
+  System(dmMed, "Медицинская витрина")
+  System(dmFin, "Финтех-витрина")
+  System(dmCorp, "Корпоративная витрина")
+}
+
+System_Boundary(BI, "BI / Портал") {
+  System(portal, "Портал самообслуживания")
+  System(biTool, "BI-система")
+}
+
+' === User interactions ===
+Rel(doctor, medCore, "Вносит данные")
+Rel(client, finCore, "Финансовые операции")
+Rel(manager, portal, "Запросы отчётов")
+
+' === Event flows ===
+Rel(medCore, bus, "События лечения")
+Rel(finCore, bus, "События транзакций")
+Rel(newFin, bus, "Новый финтех-продукт")
+Rel(corpSys, bus, "HR/инвентарь/операции")
+Rel(pharma, bus, "Поставки")
+Rel(device, bus, "Телеметрия")
+
+' === Into Data Platform ===
+Rel(bus, dataLake, "Стримы событий")
+Rel(dataLake, dmMed, "ETL/ELT медицинских агрегатов")
+Rel(dataLake, dmFin, "ETL/ELT фин. агрегатов")
+Rel(dataLake, dmCorp, "ETL/ELT корпоративных данных")
+
+' === BI Consumption ===
+Rel(portal, dmMed, "Отчёты")
+Rel(portal, dmFin, "Отчёты")
+Rel(portal, dmCorp, "Отчёты")
+Rel(biTool, dmMed, "Аналитика")
+Rel(biTool, dmFin, "Аналитика")
+Rel(biTool, dmCorp, "Аналитика")
+
+' === AI integration ===
+Rel(medCore, aiSvc, "Данные случая лечения")
+Rel(aiSvc, medCore, "Рекомендации")
+Rel(aiSvc, bus, "Обезличенные результаты ИИ")
+Rel(bus, dataLake, "Результаты ИИ → Lake")
+
+@enduml

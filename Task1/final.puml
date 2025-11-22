@@ -1,0 +1,60 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ---- Users ----
+Person(biUser, "Бизнес-пользователь")
+Person(doctor, "Врач / оператор клиники")
+Person(finUser, "Финтех-сотрудник")
+
+System_Boundary(sys, "Экосистема «Будущее 2.0»") {
+
+  Container(dataPortal, "Портал витрины данных", "Web")
+  Container(biSemantic, "Семантический слой", "API Gateway")
+  Container(biTool, "BI-система", "Power BI")
+
+  Container_Boundary(dp, "Облачная платформа данных") {
+    Container(dataLake, "Data Lake / ODS", "Storage")
+    Container(dmMedical, "Медицинская витрина", "Analytical DB")
+    Container(dmFin, "Финтех-витрина", "Analytical DB")
+    Container(dmCorp, "Корпоративная витрина", "Analytical DB")
+    Container(streamBus, "Шина данных", "Kafka")
+    Container(meta, "Каталог данных", "Metadata service")
+    Container(etl, "ETL/ELT", "Airflow")
+  }
+
+  Container_Boundary(med, "Медицинский домен") {
+    Container(medCore, "Медицинская система", "Core App")
+    Container(aiServices, "ИИ-сервисы", "Python")
+  }
+
+  Container_Boundary(fin, "Финтех-домен") {
+    Container(finCore, "Финтех-платформа", "Golang/Java")
+  }
+
+  Container(legacyDwh, "Legacy DWH", "MS SQL 2008")
+}
+
+' ---- Relations ----
+Rel(biUser, dataPortal, "Создаёт отчёты")
+Rel(dataPortal, biSemantic, "Запросы данных")
+Rel(biTool, biSemantic, "Запросы витрин")
+
+Rel(biSemantic, dmMedical, "Чтение витрины")
+Rel(biSemantic, dmFin, "Чтение витрины")
+Rel(biSemantic, dmCorp, "Чтение витрины")
+Rel(biSemantic, meta, "Метаданные, доступ")
+
+Rel(medCore, streamBus, "События медицинских процессов")
+Rel(finCore, streamBus, "Финансовые события")
+
+Rel(etl, streamBus, "Чтение данных")
+Rel(etl, dataLake, "Загрузка данных")
+Rel(etl, dmMedical, "Формирование витрин")
+Rel(etl, dmFin, "Формирование витрин")
+Rel(etl, dmCorp, "Формирование витрин")
+Rel(etl, legacyDwh, "CDC-загрузка")
+
+Rel(aiServices, medCore, "Запрос данных лечения")
+Rel(aiServices, streamBus, "Результаты аналитики")
+
+@enduml

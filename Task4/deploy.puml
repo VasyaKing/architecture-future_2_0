@@ -1,0 +1,68 @@
+@startuml
+
+title Упрощённая диаграмма автоматизации развёртывания (Terraform vs Manual)
+
+rectangle "Облачный провайдер" {
+
+    ' ============================
+    ' Compute
+    ' ============================
+    package "Вычислительные ресурсы" {
+        node "Кластер приложений\n(Terraform)" as k8s
+        node "Доменные сервисы\n(CI/CD)" as services
+        node "Портал самообслуживания\n(CI/CD)" as portal
+        node "Legacy DWH VM\n(Manual)" as legacyVm
+    }
+
+    ' ============================
+    ' Storage
+    ' ============================
+    package "Хранилище" {
+        node "Общее хранилище данных\n(Terraform)" as storage
+        node "Диски для VM\n(Terraform)" as disks
+    }
+
+    ' ============================
+    ' Event Streaming
+    ' ============================
+    package "Событийная шина" {
+        node "Kafka Cluster\n(Terraform)" as kafka
+    }
+
+    ' ============================
+    ' API Layer
+    ' ============================
+    package "API слой" {
+        node "API Gateway\n(Terraform)" as apigw
+    }
+
+    ' ============================
+    ' Data Platform
+    ' ============================
+    package "Платформа данных" {
+        node "ETL задачи\n(CI/CD)" as etl
+        node "Аналитическая БД\n(Terraform)" as adb
+    }
+
+    ' ============================
+    ' BI & Users
+    ' ============================
+    package "BI и пользователи" {
+        node "Power BI\n(Manual)" as bi
+        node "Бизнес-пользователь\n(Manual)" as user
+    }
+}
+
+' =================================
+' Relationships
+' =================================
+user --> apigw : HTTP
+apigw --> portal
+portal --> adb : Запросы к витринам
+services --> kafka : Публикация событий
+kafka --> storage : Поток данных
+etl --> storage : Read/Write
+etl --> adb : Загрузка
+bi --> adb : Чтение данных
+
+@enduml
